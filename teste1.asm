@@ -15,7 +15,7 @@ section .data
 pede_nome           db      'Bem Vindo. Digite seu nome: ',0dh,0ah
 size_pede_nome      dw      $-pede_nome
 
-boas_vindas1        db      'Hola,',0
+boas_vindas1        db      'Hola, ',0
 size_boas_vindas1   dw      $-boas_vindas1
 boas_vindas2        db      ', bem-vindo ao programa de CALC IA-32',0dh,0ah
 size_boas_vindas2   dw      $-boas_vindas2
@@ -70,6 +70,27 @@ section .text
 ; else chama funcao apropriada
 ; loop calculadora
 ; fim programa
+_main:  push pede_nome
+        push size_pede_nome
+        call mostra_string
+        push nome
+        push 30
+        call pega_string
+        push boas_vindas1
+        push size_boas_vindas1
+        call mostra_string
+        push nome
+        push 30
+        call mostra_string
+        push boas_vindas2
+        push size_boas_vindas2
+        call mostra_string
+        push pede_precisao
+        push size_pede_precisao
+        call mostra_string
+_exit:  mov eax,1
+        mov ebx, 0
+        int 0x80
 
 
 ; funcao de entrada de dados string
@@ -80,13 +101,13 @@ pega_string: enter 0,0
              mov edx, [ebp+8]   ; tamanho do buffer
              mov ecx, [ebp+10]  ; endereco do buffer
              int 0x80
-             leave    
+             leave 
+             ret 4
 
 ; funcao de entrada de dados int 16bit
 ; precisamos de um buffer de no minimo 6 chars,
 ; um sinal de negativo e mais o range do int16
 ; Deve retornar pelo registrador EAX 
-%define buffer_int16    d
 %define resultado       dword   [epb-13]
 %define flag_negativo   dword   [epb-15] 
 %define proximo_char    dbyte   [ebp-ecx]
@@ -139,17 +160,17 @@ fim_pega_int: ret ; A principio ela n recebe argumento
 
 ; funcao de saida de int 16bit
 mostra_int:
-
-
 ; divide por 10, pega modulo, subtrai por 
 
 
 ;funcao de saida de 
+%define num_chars       [ebp+8]
+%define string_begin    [ebp+10]
 mostra_string:  enter 0,0
                 mov eax, 4
                 mov ebx, 1
-                mov edx, [ebp+8]
-                mov ecx  [ebp+10]
+                mov ecx  string_begin
+                mov edx, num_chars
                 int 0x80
                 leave
                 res 4 ; Dois argumentos that is
