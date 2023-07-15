@@ -1,14 +1,25 @@
-;
-; Arquivo que possui função principal do programa
+;       Trabalho 2 de Software Basico   - Arquivo principal calc.asm
+;       Aluno: Giulia Filippi Giannetti         190013745
+;       Programa age como calculadora de seis opcoes:
+;       - SOMA
+;       - SUBTRACAO
+;       - MULTIPLICACAO
+;       - DIVISAO
+;       - MOD
+;       - EXPONENCIACAO
 ; Requisitos: Essa função principal (main) não faz operações nem entrada ou saída de dados, só chama outras funções
 
-global mostra_menu  ; Loop de escolha da operacao
+global _start                           ; Funcao Main
+
+global mostra_menu                      ; Loop de escolha da operacao
+
+global mostra_int
+global pega_int
 
 global mostra_string
 global pega_string
 
-global mostra_int
-global pega_int
+global precisao
 
 section .data 
 ; Strings do menu inicial, indicacao de overflow
@@ -58,42 +69,133 @@ precisao    resw 1
 opcao_menu  resw 1
 
 section .text
-; Output string que pede nome
-; Input nome
-; Output boas vindas
-; Output pergunta precisao
-; Input resposta
-; def loop calculadora
-; Output menu de operacoes
-; Input opcao
-; if opcao = sair termina programa
-; else chama funcao apropriada
-; loop calculadora
-; fim programa
-_main:  push pede_nome
-        push size_pede_nome
-        call mostra_string
-        push nome
-        push 30
-        call pega_string
-        push boas_vindas1
-        push size_boas_vindas1
-        call mostra_string
-        push nome
-        push 30
-        call mostra_string
-        push boas_vindas2
-        push size_boas_vindas2
-        call mostra_string
-        push pede_precisao
-        push size_pede_precisao
-        call mostra_string
-_exit:  mov eax,1
-        mov ebx, 0
-        int 0x80
+_start:         push pede_nome
+                push size_pede_nome
+                call mostra_string
+                push nome
+                push 30
+                call pega_string
+                push boas_vindas1
+                push size_boas_vindas1
+                call mostra_string
+                push nome
+                push 30
+                call mostra_string
+                push boas_vindas2
+                push size_boas_vindas2
+                call mostra_string
+                push pede_precisao
+                push size_pede_precisao
+                call mostra_string
+                call pega_int
+_exit:          mov eax,1
+                mov ebx, 0
+                int 0x80
 
 
-; funcao de entrada de dados string
+
+; Funcao de entrada de dados int (scanf("%d"))
+; Deve retornar pelo registrador EAX 
+; Nota: caractere fica no topo da pilha. [ebp-6] = esp
+%define resultado      [epb-4]
+%define flag_negativo  [epb-5] 
+%define caractere      [ebp-6]      
+
+pega_int:       enter 6,0                       ; resultado (4) + flag_negativo (1) + caractere (1)
+                mov eax, 0
+                mov dword resultado, 0
+                mov byte flag_negativo, 0       ; Inicia esses dois valores como 0
+                cmp precisao, 1
+                je caso32
+                mov eax, 3
+                mov ebx, 0
+                mov ecx, esp                    ; inicio da string no caso 16bit
+                mov edx, 1
+                int 0x80                        ; Pegou primeiro caractere
+                mov al, caractere               ; set loop
+                cmp al, 0x2D                    ; Caractere '-' se for negativo, basta subtrair ao inves de somar o valor
+                jne mult
+                mov byte flag_negativo, 1
+pega:           mov eax, 3          
+                mov ebx, 0
+                mov ecx,esp
+                mov edx,1
+                int 0x80
+                mov al, caractere
+                cmp al, 0x0A                    ; compara com \n
+                je fim_pega_int
+mult:           mov ax, resultado   
+                mov cx, 10
+                imul cl                         ; ah e al com resultado (ax)
+                mov resultado, ax
+                mov ax, 0                       ; reseta o valor de ax para evitar problemas
+compara:        mov al, caractere
+                sub al, 0x30                    ; transforma em int
+                cmp byte flag_negativo, 1
+                je subtrai
+                add resultado, ax
+                jmp pega
+subtrai:        sub resultado, ax
+                jmp pega
+
+caso32:         mov eax, 3
+                mov ebx, 0
+                mov ecx, esp                    ; inicio da string no caso 16bit
+                mov edx, 1
+                int 0x80                        ; Pegou primeiro caractere
+                mov al, caractere               ; set loop
+                cmp al, 0x2D                    ; Caractere '-' se for negativo, basta subtrair ao inves de somar o valor
+                jne mult32
+                mov byte flag_negativo, 1
+pega32:         mov eax, 3          
+                mov ebx, 0
+                mov ecx,esp
+                mov edx,1
+                int 0x80
+                mov al, caractere
+                cmp al, 0x0A                    ; compara com \n
+                je fim_pega_int
+mult32:         mov eax, resultado   
+                mov cx, 10
+                imul cx                         ; dx e ax com resultado (ax)
+                or eax, dx
+                mov resultado, eax
+                mov eax, 0                      ; reseta o valor de ax para evitar problemas
+compara32:      mov al, caractere
+                sub al, 0x30                    ; transforma em int
+                cmp byte flag_negativo,1
+                je subtrai
+                add resultado, ax
+                jmp pega32
+subtrai32:      sub resultado, ax
+                jmp pega32
+
+
+fim_pega_int:   mov eax, 0
+                mov eax, resultado
+                leave
+                ret                             ; A principio ela n envia o resultado por EAX
+
+
+
+; Funcao de saida de valores inteiros (printf("%d"))
+; Sem valor de retorno
+; Recebe um valor por pilha que pode ser um int32 ou int16, necessário verificar a flag
+mostra_int:     enter 4,0       ; A principio, valor suficiente para um int32 ou int16
+                
+
+
+
+
+fim_mostra_int: leave
+                ret
+
+
+
+
+
+
+; funcao de entrada de dados string (scanf("%s"))
 ; assume-se que o ponteiro e o primeiro argumento passado pra pilha
 pega_string: enter 0,0
              mov eax, 3
@@ -104,66 +206,8 @@ pega_string: enter 0,0
              leave 
              ret 4
 
-; funcao de entrada de dados int 16bit
-; precisamos de um buffer de no minimo 6 chars,
-; um sinal de negativo e mais o range do int16
-; Deve retornar pelo registrador EAX 
-%define resultado       dword   [epb-13]
-%define flag_negativo   dword   [epb-15] 
-%define proximo_char    dbyte   [ebp-ecx]
-pega_int:   enter 15,0 ; 11 bytes do string e mais o word que vai guardar o valor intermediario
-            mov word resultado, 0
-            mov word flag_negativo, 0  ; Inicia esses dois valores como 0
-            cmp precisao, 1
-            je pega32
-            mov eax, 3
-            mov ebx, 0
-            mov ecx, ebp        ; inicio da string no caso 16bit
-            sub ecx, 6
-            mov edx, 6
-            int 0x80                      ; Vamos supor '-22039'
-            mov ecx, 6                    ; set loop
-            cmp proximo_char, 0x2D        ; Caractere '-' se for negativo, basta subtrair ao inves de somar o valor
-            mov flag_negativo, 1
 
-converte:   mov al, proximo_char
-            cmp flag_negativo, 1        ; Caractere '-' se for negativo, basta subtrair ao inves de somar o valor
-            je subtrai
-            sub al, 0x30 
-            add word resultado, al
-            mul word resultado, 10
-            loop converte
-            mov eax, resultado
-            jmp fim_pega_int
-
-subtrai:    sub al, 0x30
-            sub word resultado, al
-            mul word resultado, 10
-            loop converte
-            mov eax, resultado
-            jmp fim_pega_int
-
-pega32:     mov eax, 3
-            mov ebx, 0
-            mov ecx, ebp
-            sub ecx, 11
-            mov edx, 11
-            int 0x80
-            mov ecx, 11
-            cmp proximo_char, 0x2D
-            jne converte
-            mov flag_negativo,1
-            jmp converte
-
-
-fim_pega_int: ret ; A principio ela n recebe argumento
-
-; funcao de saida de int 16bit
-mostra_int:
-; divide por 10, pega modulo, subtrai por 
-
-
-;funcao de saida de 
+;funcao de saida de strings (printf("%s"))
 %define num_chars       [ebp+8]
 %define string_begin    [ebp+10]
 mostra_string:  enter 0,0
@@ -173,4 +217,4 @@ mostra_string:  enter 0,0
                 mov edx, num_chars
                 int 0x80
                 leave
-                res 4 ; Dois argumentos that is
+                ret 4 ; Dois argumentos that is
