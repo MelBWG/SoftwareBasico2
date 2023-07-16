@@ -14,7 +14,8 @@ global _start                           ; Funcao Main
 global mostra_menu                      ; Loop de escolha da operacao
 
 global mostra_int
-global pega_int
+global pega_int16
+global pega_int32
 
 global mostra_string
 global pega_string
@@ -61,12 +62,15 @@ s_menu_principal2   dw      $-menu_principal2
 msg_overflow        db      'OCORREU OVERFLOW',0dh,0ah
 s_msg_overflow      dw      $-msg_overflow
 
+nwln                db      0dh,0ah
+s_nwln              dw      2
+
+precisao            dw      0       ; Tem que ser iniciado porque e utilizado pela func pega_int
 
 section .bss 
 ; Locais para armazenar nome do usuario e operacao
-nome        resb 30
-precisao    resw 1
-opcao_menu  resw 1
+nome        resb    30
+opcao_menu  resw    1
 
 section .text
 _start:         push pede_nome
@@ -88,6 +92,9 @@ _start:         push pede_nome
                 push size_pede_precisao
                 call mostra_string
                 call pega_int
+                mov precisao, ax
+                push eax
+                call mostra_int
 _exit:          mov eax,1
                 mov ebx, 0
                 int 0x80
@@ -97,16 +104,14 @@ _exit:          mov eax,1
 ; Funcao de entrada de dados int (scanf("%d"))
 ; Deve retornar pelo registrador EAX 
 ; Nota: caractere fica no topo da pilha. [ebp-6] = esp
-%define resultado      [epb-4]
-%define flag_negativo  [epb-5] 
-%define caractere      [ebp-6]      
+%define resultado      [epb-2]
+%define flag_negativo  [epb-3] 
+%define caractere      [ebp-4]      
 
-pega_int:       enter 6,0                       ; resultado (4) + flag_negativo (1) + caractere (1)
+pega_int16:     enter 4,0                       ; resultado (4) + flag_negativo (1) + caractere (1)
                 mov eax, 0
                 mov dword resultado, 0
                 mov byte flag_negativo, 0       ; Inicia esses dois valores como 0
-                cmp precisao, 1
-                je caso32
                 mov eax, 3
                 mov ebx, 0
                 mov ecx, esp                    ; inicio da string no caso 16bit
@@ -123,7 +128,7 @@ pega:           mov eax, 3
                 int 0x80
                 mov al, caractere
                 cmp al, 0x0A                    ; compara com \n
-                je fim_pega_int
+                je fim_pega_int16
 mult:           mov ax, resultado   
                 mov cx, 10
                 imul cl                         ; ah e al com resultado (ax)
@@ -138,7 +143,25 @@ compara:        mov al, caractere
 subtrai:        sub resultado, ax
                 jmp pega
 
-caso32:         mov eax, 3
+fim_pega_int16: mov eax, 0
+                mov eax, resultado
+                leave
+                ret                             ; A principio ela n envia o resultado por EAX
+
+
+
+; Funcao de entrada de dados int (scanf("%d"))
+; Deve retornar pelo registrador EAX 
+; Nota: caractere fica no topo da pilha. [ebp-6] = esp
+%define resultado      [epb-4]
+%define flag_negativo  [epb-5] 
+%define caractere      [ebp-6]  
+
+pega_int32:     enter 6,0
+                mov eax, 0
+                mov dword resultado, 0
+                mov byte flag_negativo, 0       ; Inicia esses dois valores como 0
+                mov eax, 3
                 mov ebx, 0
                 mov ecx, esp                    ; inicio da string no caso 16bit
                 mov edx, 1
@@ -154,9 +177,9 @@ pega32:         mov eax, 3
                 int 0x80
                 mov al, caractere
                 cmp al, 0x0A                    ; compara com \n
-                je fim_pega_int
+                je fim_pega_int32
 mult32:         mov eax, resultado   
-                mov cx, 10
+                mov ecx, 10
                 imul cx                         ; dx e ax com resultado (ax)
                 or eax, dx
                 mov resultado, eax
@@ -171,44 +194,80 @@ subtrai32:      sub resultado, ax
                 jmp pega32
 
 
-fim_pega_int:   mov eax, 0
+fim_pega_int32: mov eax, 0
                 mov eax, resultado
                 leave
                 ret                             ; A principio ela n envia o resultado por EAX
 
 
 
-; Funcao de saida de valores inteiros (printf("%d"))
-; Sem valor de retorno
-; Recebe um valor por pilha que pode ser um int32 ou int16, necessário verificar a flag
-mostra_int:     enter 4,0       ; A principio, valor suficiente para um int32 ou int16
-                
+;   Funcao de saida de valores inteiros (printf("%d"))
+;   Sem valor de retorno
+;   Recebe um valor por pilha que pode ser um int32 ou int16, necessário verificar a flag
+;   Cuidado que nesse caso, esp aponta pro buffer de caracteres adquiridos
+;   Contador conta quantos caracteres foram adicionados na pilha
+%define     entrada     [ebp+8]
+%define     contador    [ebp-1]
+mostra_int:     enter 1,0                       ; A principio, valor suficiente para um int32 ou int16
+                mov contador, 0
+                cmp precisao,1
+                je calculo32
+calculo:        mov eax, 0
+                mov edx, 0
+                mov dword eax, entrada          ; Carrega valor recebido
+                cmp eax, 0                      ; Verifica se e negativo
+                jge divide
+                push 0x2D                       ; escreve o '-' antes de tudo
+                mov eax, 4
+                mov ebx, 1
+                mov ecx, esp
+                mov edx, 1
+                int 0x80
+                pop dl
+                mov eax, entrada
+                neg eax
+divide:         mov edx,0
+                mov ecx, 10  
+                idiv ecx                        ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
+                add dl, 0x30
+                push dl                         ; nesse caso passamos a lidar com um char
+                inc contador                    
+                cmp eax, 0
+                je mostra_buffer                ; se tivermos um caractere, o valor do contador vai ser 1
+                jmp dev
 
-
-
-
+mostra_buffer:  mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
+                mov ebx, 1
+                mov ecx, esp
+                mov edx, contador               ; numero de caracteres que recebemos
+                int 0x80
+                mov eax, 4
+                mov ebx, 1
+                mov ecx, nwln
+                mov edx, s_nwln
+                int 0x80
+                add esp, contador               ; libera a pilha dos caracteres lidos
 fim_mostra_int: leave
-                ret
+                ret 4
 
 
+; Funcao de entrada de dados string (scanf("%s"))
+; Assume-se que o ponteiro e o primeiro argumento passado pra pilha
+%define tam_buffer      [ebp+8]
+%define ptr_buffer      [ebp+10]
+pega_string:    enter 0,0
+                mov eax, 3
+                mov ebx, 0
+                mov ecx, ptr_buffer
+                mov edx, tam_buffer 
+                int 0x80
+                leave 
+                ret 4
 
 
-
-
-; funcao de entrada de dados string (scanf("%s"))
-; assume-se que o ponteiro e o primeiro argumento passado pra pilha
-pega_string: enter 0,0
-             mov eax, 3
-             mov ebx, 0
-             mov edx, [ebp+8]   ; tamanho do buffer
-             mov ecx, [ebp+10]  ; endereco do buffer
-             int 0x80
-             leave 
-             ret 4
-
-
-;funcao de saida de strings (printf("%s"))
-%define num_chars       [ebp+8]
+;   funcao de saida de strings (printf("%s"))
+;   recebe por pilha duas words
+%define num_chars       [ebp+8] 
 %define string_begin    [ebp+10]
 mostra_string:  enter 0,0
                 mov eax, 4
@@ -217,4 +276,4 @@ mostra_string:  enter 0,0
                 mov edx, num_chars
                 int 0x80
                 leave
-                ret 4 ; Dois argumentos that is
+                ret 4                           ; Dois argumentos that is
