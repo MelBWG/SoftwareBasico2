@@ -11,11 +11,7 @@ extern mostra_int16
 extern mostra_int32
 extern pega_int16
 extern pega_int32
-
-extern msg_overflow
-extern s_msg_overflow
-extern nwln
-extern s_nwln
+extern mostra_string
 
 extern precisao
 
@@ -26,41 +22,40 @@ extern precisao
 ; A princípio se a multiplicação
 ; funcao n recebe argumentos      
 section .text
-multiplicacao:  enter 0,0               ; começa com pilha n iniciada
-                cmp precisao,1
+multiplicacao:  cmp word [precisao],1
                 je mult_lint
+                mov edx,0
                 sub esp, 2
-                pega_int16
+                call pega_int16
                 mov [esp], ax
-                pega_int16
+                call pega_int16
                 mov cx, ax
                 mov ax, [esp]
+                add esp,2
                 imul cx
                 jo overflow
-                add esp, 2
                 push ax
                 call mostra_int16
                 jmp fim_mult
                 
 mult_lint:      sub esp, 4
-                pega_int32
+                call pega_int32
                 mov [esp], eax
-                pega_int32
+                call pega_int32
                 mov ecx, eax
                 mov eax, [esp]
+                add esp,4
                 imul ecx
                 jo overflow
-                add esp, 4
                 push eax
                 call mostra_int32
-                jmp fim_soma
+                jmp fim_mult
 
 overflow:       push msg_overflow
-                push s_msg_overflow
+                push word s_msg_overflow
                 call mostra_string
                 push nwln
-                push s_nwln
-                call mostra_string
+                push word s_nwln
+                call mostra_string 
                 
-fim_mult:       leave
-                ret
+fim_mult:       ret

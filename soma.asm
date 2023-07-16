@@ -13,26 +13,29 @@ extern pega_int16
 extern pega_int32
 extern precisao
 
+section .data   ; apenas debug!
+
+verifica_erro   db  'saiu com sucesso',0dh,0ah
+s_verifica_erro     equ     $-verifica_erro
+
 ; funcao n recebe argumentos      
 section .text
-soma:           enter 0,0               ; começa com pilha n iniciada
-                cmp precisao,1
+soma:           cmp word [precisao],1
                 je soma_lint
-                sub esp, 2
-                pega_int16
-                mov [esp], ax
-                pega_int16
-                add [esp], ax
+                push ax
+                call pega_int16
+                mov word [esp], ax
+                call pega_int16
+                add word [esp], ax
                 call mostra_int16
                 jmp fim_soma
                 
 soma_lint:      sub esp, 4
-                pega_int32
+                call pega_int32
                 mov [esp], eax
-                pega_int32
+                call pega_int32
                 add [esp], eax
                 call mostra_int32
                 jmp fim_soma
 
-fim_soma:       leave
-                ret
+fim_soma:       ret

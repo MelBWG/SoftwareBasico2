@@ -9,6 +9,7 @@
 ;       - EXPONENCIACAO
 ; Requisitos: Essa função principal (main) não faz operações nem entrada ou saída de dados, só chama outras funções
 
+
 global _start                           ; Funcao Main
 
 global mostra_menu                      ; Loop de escolha da operacao
@@ -22,7 +23,6 @@ global mostra_string
 global pega_string
 
 global precisao
-
 
 ;----------------------------------------------------------------------------------
 
@@ -49,19 +49,19 @@ menu_principal2     db      '- 2: SUBTRACAO',0dh,0ah
 s_menu_principal2   equ      $-menu_principal2
 
 menu_principal3     db      '- 3: MULTIPLICACAO',0dh,0ah
-s_menu_principal3   equ      $-menu_principal2
+s_menu_principal3   equ      $-menu_principal3
 
 menu_principal4     db      '- 4: DIVISAO',0dh,0ah
-s_menu_principal4   equ      $-menu_principal2
+s_menu_principal4   equ      $-menu_principal4
 
 menu_principal5     db      '- 5: EXPONECIACAO',0dh,0ah
-s_menu_principal5   equ      $-menu_principal2
+s_menu_principal5   equ      $-menu_principal5
 
 menu_principal6     db      '- 6: MOD',0dh,0ah
-s_menu_principal6   equ      $-menu_principal2
+s_menu_principal6   equ      $-menu_principal6
 
 menu_principal7     db      '- 7: SAIR',0dh,0ah
-s_menu_principal7   equ      $-menu_principal2
+s_menu_principal7   equ      $-menu_principal7
 
 msg_overflow        db      'OCORREU OVERFLOW',0dh,0ah
 s_msg_overflow      equ      $-msg_overflow
@@ -83,6 +83,11 @@ opcao_menu  resw    1
 
 ;-----------------------------------------------------------------------------------
 
+
+%include 'soma.asm'
+%include 'divisao.asm'
+%include 'subtracao.asm'
+%include 'multiplicacao.asm'
 
 ;----------------------------------------------------------------------------------
 
@@ -107,45 +112,56 @@ _start:         push pede_nome
                 call mostra_string
                 call pega_int16
                 mov [precisao], ax
+                push ax
+                call mostra_int16
+
 mostra_menu:    push menu_principal0
                 push word s_menu_principal0
                 call mostra_string
+
                 push menu_principal1
                 push word s_menu_principal1
                 call mostra_string
+
                 push menu_principal2
                 push word s_menu_principal2
                 call mostra_string
+
                 push menu_principal3
                 push word s_menu_principal3
                 call mostra_string
+
                 push menu_principal4
                 push word s_menu_principal4
                 call mostra_string
+
                 push menu_principal5
                 push word s_menu_principal5
                 call mostra_string
+
                 push menu_principal6
                 push word s_menu_principal6
                 call mostra_string
+
                 push menu_principal7
                 push word s_menu_principal7
                 call mostra_string
+
                 call pega_int16
-                mov [opcao_menu], ax
-                cmp [opcao_menu], 1d
+                mov word [opcao_menu], ax
+                cmp word [opcao_menu], 1d
                 je chama_soma
-                cmp [opcao_menu], 2d
+                cmp word [opcao_menu], 2d
                 je chama_sub
-                cmp [opcao_menu], 3d
+                cmp word [opcao_menu], 3d
                 je chama_mult
-                cmp [opcao_menu], 4d
+                cmp word [opcao_menu], 4d
                 je chama_div
-                cmp [opcao_menu], 5d
+                cmp word [opcao_menu], 5d
                 je chama_exp
-                cmp [opcao_menu], 6d
+                cmp word [opcao_menu], 6d
                 je chama_mod
-                cmp [opcao_menu], 7d
+                cmp word [opcao_menu], 7d
                 je _exit
                 jmp mostra_menu
 
@@ -165,10 +181,10 @@ chama_mult:     call multiplicacao
 chama_div:      call divisao
                 jmp mostra_menu
 
-chama_exp:      call exponencial
+chama_exp:      ;call exponencial
                 jmp mostra_menu
 
-chama_mod:      call modulo
+chama_mod:      ;call modulo
                 jmp mostra_menu
 
 ;----------------------------------------------------------------------------------
@@ -295,7 +311,7 @@ calculo16:      mov eax, 0
                 mov ecx, esp
                 mov edx, 1
                 int 0x80
-                inc esp
+                add esp, 1
                 mov ax, entrada16
                 neg ax
 divide16:       mov edx,0
@@ -304,7 +320,7 @@ divide16:       mov edx,0
                 add dx, 0x30
                 sub esp, 1
                 mov byte [esp],dl               ; nesse caso passamos a lidar com um char
-                inc byte contador16                    
+                add byte contador16, 1                    
                 cmp eax, 0
                 je mostra_buffer16              ; se tivermos um caractere, o valor do contador vai ser 1
                 jmp divide16
@@ -312,14 +328,16 @@ divide16:       mov edx,0
 mostra_buffer16:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
                 mov ebx, 1
                 mov ecx, esp
-                mov edx, contador16             ; numero de caracteres que recebemos
+                mov dl, contador16             ; numero de caracteres que recebemos
                 int 0x80
                 mov eax, 4
                 mov ebx, 1
                 mov ecx, nwln
                 mov edx, s_nwln
                 int 0x80
-                add esp, contador16             ; libera a pilha dos caracteres lidos
+                mov eax,0
+                mov al, contador16
+                add esp, eax             ; libera a pilha dos caracteres lidos
                 leave
                 ret 2
 
@@ -354,24 +372,31 @@ divide32:       mov edx,0
                 add dx, 0x30
                 sub esp, 1
                 mov byte [esp],dl                ; nesse caso passamos a lidar com um char
-                inc byte contador32                  
+                inc byte contador32                  ; se tivermos um caractere, o valor do contador vai ser 1
                 cmp eax, 0
-                je mostra_buffer32               ; se tivermos um caractere, o valor do contador vai ser 1
+                je mostra_buffer32
                 jmp divide32
 
 mostra_buffer32:mov eax, 4                       ; Evita problemas :) podemos retirar posteriormente
                 mov ebx, 1
                 mov ecx, esp
-                mov edx, contador32              ; numero de caracteres que recebemos
+                mov dl, contador32              ; numero de caracteres que recebemos
                 int 0x80
                 mov eax, 4
                 mov ebx, 1
                 mov ecx, nwln
                 mov edx, s_nwln
                 int 0x80
-                add esp, contador32              ; libera a pilha dos caracteres lidos
+                mov eax,0
+                mov al, contador32
+                add esp, eax              ; libera a pilha dos caracteres lidos
                 leave
                 ret 4
+
+add_zero32:     sub esp,1
+                mov byte [esp], 0x30
+                inc byte contador32
+                jmp mostra_buffer32
 
 
 ; Funcao de entrada de dados string (scanf("%s"))
@@ -400,7 +425,7 @@ pega_char:      mov eax, 3
 exit:           leave 
                 ret 6
 
-clean_exit1:    sub esp, 1
+clean_exit:     sub esp, 1
 readcharl:      mov eax, 3
                 mov ebx, 0
                 mov ecx, esp

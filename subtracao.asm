@@ -15,24 +15,22 @@ extern precisao
 
 ; funcao n recebe argumentos      
 section .text
-subtracao:      enter 0,0               ; começa com pilha n iniciada
-                cmp precisao,1
+subtracao:      cmp word [precisao],1
                 je sub_lint
                 sub esp, 2
-                pega_int16
+                call pega_int16
                 mov [esp], ax
-                pega_int16
+                call pega_int16
                 sub [esp], ax
                 call mostra_int16
                 jmp fim_sub
                 
 sub_lint:       sub esp, 4
-                pega_int32
+                call pega_int32
                 mov [esp], eax
-                pega_int32
+                call pega_int32
                 sub [esp], eax
                 call mostra_int32
                 jmp fim_sub
 
-fim_sub:        leave
-                ret
+fim_sub:        ret

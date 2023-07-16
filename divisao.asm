@@ -13,40 +13,36 @@ extern pega_int16
 extern pega_int32
 
 extern precisao
-
-; Pega primeiro valor, guarda em ax
-; pega segundo valor, guarda em cx
-; Resultado obviamente vai ser em dx e ax
-; faz um shl dx 8b mais or eax,dx
-; A princípio se a multiplicação
-; funcao n recebe argumentos      
+  
+; Se o valor dos operandos é negativo, dx deve conter a extensão do sinal!!
 section .text
-divisao:        enter 0,0               ; começa com pilha n iniciada
-                cmp precisao,1
+divisao:        cmp word [precisao],1
                 je div_lint
                 sub esp, 2
-                pega_int16
+                call pega_int16
                 mov [esp], ax
-                pega_int16
+                call pega_int16
+                mov ecx, 0
+                mov edx, 0
                 mov cx, ax
                 mov ax, [esp]
-                idiv cx
                 add esp, 2
+                idiv cx
                 push ax
                 call mostra_int16
                 jmp fim_div
                 
 div_lint:       sub esp, 4
-                pega_int32
+                call pega_int32
                 mov [esp], eax
-                pega_int32
+                call pega_int32
                 mov ecx, eax
                 mov eax, [esp]
+                mov edx, 0
                 idiv ecx
                 pop edx
                 push eax
                 call mostra_int32
                 jmp fim_div
                 
-fim_div:        leave
-                ret
+fim_div:        ret
