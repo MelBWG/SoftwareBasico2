@@ -183,7 +183,7 @@ chama_mult:     call multiplicacao
 chama_div:      call divisao
                 jmp mostra_menu
 
-chama_exp:      call exponencial
+chama_exp:      call exponenciacao
                 jmp mostra_menu
 
 chama_mod:      call modulo
@@ -221,11 +221,11 @@ pega:           mov eax, 3
                 je fim_pega_int16
 mult:           mov ax, resultado   
                 mov cx, 10
-                imul cl                         ; ah e al com resultado (ax)
+                imul cx                         ; ah e al com resultado (ax)
                 mov resultado, ax
                 mov ax, 0                       ; reseta o valor de ax para evitar problemas
 compara:        mov al, caractere
-                sub al, 0x30                    ; transforma em int
+                sub ax, 0x30                    ; transforma em int
                 cmp byte flag_negativo, 1
                 je subtrai
                 add resultado, ax
@@ -270,7 +270,7 @@ pega32:         mov eax, 3
                 je fim_pega_int32
 mult32:         mov eax, resultado32   
                 mov ecx, 10
-                imul cx                         ; dx e ax com resultado (ax)
+                imul ecx                         ; dx e ax com resultado (ax)
                 shl edx, 8
                 or eax, edx
                 mov resultado32, eax
@@ -316,15 +316,16 @@ calculo16:      mov eax, 0
                 add esp, 1
                 mov ax, entrada16
                 neg ax
-divide16:       mov edx,0
-                mov ecx, 10  
-                div ecx                         ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
+                cwd
+divide16:       mov edx, 0
+                mov cx, 10  
+                div cx                          ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
                 add dx, 0x30
                 sub esp, 1
                 mov byte [esp],dl               ; nesse caso passamos a lidar com um char
                 add byte contador16, 1                    
                 cmp eax, 0
-                je mostra_buffer16              ; se tivermos um caractere, o valor do contador vai ser 1
+                jle mostra_buffer16              ; se tivermos um caractere, o valor do contador vai ser 1
                 jmp divide16
 
 mostra_buffer16:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
@@ -370,7 +371,7 @@ calculo32:      mov eax, 0
                 neg eax
 divide32:       mov edx,0
                 mov ecx, 10  
-                div ecx                          ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
+                idiv ecx                          ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
                 add dx, 0x30
                 sub esp, 1
                 mov byte [esp],dl                ; nesse caso passamos a lidar com um char

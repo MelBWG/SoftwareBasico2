@@ -35,7 +35,7 @@ loop_exp:       dec word [esp]
                 cmp word [esp], 1
                 je fim_loop
                 imul cx
-                jo overflow
+                jo overflow_exp
                 jmp loop_exp
 fim_loop:       add esp, 2
                 push ax
@@ -52,14 +52,14 @@ loop_exp32:     dec dword [esp]
                 cmp dword [esp],1
                 je fim_loop32
                 imul ecx
-                jo overflow
+                jo overflow_exp
                 jmp loop_exp32
 fim_loop32:     add esp,4
                 push eax
                 call mostra_int32
                 jmp fim_exp
 
-overflow:       add esp, 2
+overflow_exp:   add esp, 2
                 cmp word [precisao], 1
                 jne m_m_ovflw
                 add esp, 2

@@ -25,11 +25,10 @@ divisao:        cmp word [precisao],1
                 mov ecx, 0
                 mov edx, 0
                 mov cx, ax
+                mov eax,0
                 mov ax, [esp]
-                cmp ax, 0
-                jge calculo
-                mov dx, 0xFFFF 
-calculo:        add esp, 2
+                cwd
+cont:           add esp, 2
                 idiv cx
                 push ax
                 call mostra_int16
@@ -41,11 +40,10 @@ div_lint:       sub esp, 4
                 call pega_int32
                 mov ecx, eax
                 mov edx, 0
+                mov eax,0
                 mov eax, [esp]
-                cmp eax, 0
-                jge calculo32
-                mov edx, 0xFFFFFFFF 
-calculo32:      add esp, 4
+                cdq
+cont32:         add esp, 4
                 idiv ecx
                 push eax
                 call mostra_int32
