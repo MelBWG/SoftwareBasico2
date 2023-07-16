@@ -25,15 +25,15 @@ section .text
 exponenciacao:  cmp word [precisao],1
                 je mult_lint
                 mov edx,0
-                sub esp, 2
+                sub esp, 2                  ; adiciona espaco na pilha pro segundo operador
                 call pega_int16
-                mov cx, ax
+                mov cx, ax                  
                 call pega_int16
-                mov [esp], ax   ; contador do loop
+                mov [esp], ax               ; contador do loop
                 mov ax, cx
-loop_exp:       dec word [esp]
-                cmp word [esp], 1
+loop_exp:       cmp word [esp], 1
                 je fim_loop
+                sub word [esp], 1
                 imul cx
                 jo overflow_exp
                 jmp loop_exp
@@ -48,9 +48,9 @@ exp_lint:       sub esp, 4
                 call pega_int32
                 mov [esp], eax
                 mov eax, ecx
-loop_exp32:     dec dword [esp]
-                cmp dword [esp],1
+loop_exp32:     cmp dword [esp],1
                 je fim_loop32
+                sub dword [esp], 1
                 imul ecx
                 jo overflow_exp
                 jmp loop_exp32
