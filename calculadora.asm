@@ -28,7 +28,7 @@ global precisao
 
 section .data 
 
-pede_nome           db      'Bem Vindo. Digite seu nme: ',0ah,0dh
+pede_nome           db      'Bem Vindo. Digite seu nome: ',0ah,0dh
 size_pede_nome      equ       $-pede_nome
 
 boas_vindas1        db      'Hola, ',0
@@ -419,7 +419,7 @@ pega_char:      mov eax, 3
                 cmp byte [eax], 0ah
                 je nl
                 mov ax, tam_buffer
-                cmp contador, ax
+                cmp word contador, ax
                 je clean_exit
                 jmp pega_char             
 exit:           leave 
@@ -430,6 +430,7 @@ readcharl:      mov eax, 3
                 mov ebx, 0
                 mov ecx, esp
                 mov edx, 1
+                int 0x80
                 mov al, [esp]  
                 cmp byte al, 0ah
                 jne readcharl
