@@ -16,7 +16,7 @@ extern precisao
   
 ; Se o valor dos operandos é negativo, dx deve conter a extensão do sinal!!
 section .text
-modulo:        cmp word [precisao],1
+modulo:         cmp word [precisao],1
                 je div_lint
                 sub esp, 2
                 call pega_int16
@@ -27,11 +27,11 @@ modulo:        cmp word [precisao],1
                 mov cx, ax
                 mov ax, [esp]
                 cmp ax, 0
-                jge calculo
+                jge pega_mod
                 mov dx, 0xFFFF 
-calculo:        add esp, 2
+pega_mod:       add esp, 2
                 idiv cx
-                push ax
+                push dx
                 call mostra_int16
                 jmp fim_div
                 
@@ -43,11 +43,11 @@ mod_lint:       sub esp, 4
                 mov edx, 0
                 mov eax, [esp]
                 cmp eax, 0
-                jge calculo32
+                jge pega_mod32
                 mov edx, 0xFFFFFFFF 
-calculo32:      add esp, 4
+pega_mod32:     add esp, 4
                 idiv ecx
-                push eax
+                push edx
                 call mostra_int32
                 jmp fim_div
                 

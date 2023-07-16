@@ -85,9 +85,11 @@ opcao_menu  resw    1
 
 
 %include 'soma.asm'
-%include 'divisao.asm'
 %include 'subtracao.asm'
 %include 'multiplicacao.asm'
+%include 'divisao.asm'
+%include 'modulo.asm'
+%include 'exponenciacao.asm'
 
 ;----------------------------------------------------------------------------------
 
@@ -181,10 +183,10 @@ chama_mult:     call multiplicacao
 chama_div:      call divisao
                 jmp mostra_menu
 
-chama_exp:      ;call exponencial
+chama_exp:      call exponencial
                 jmp mostra_menu
 
-chama_mod:      ;call modulo
+chama_mod:      call modulo
                 jmp mostra_menu
 
 ;----------------------------------------------------------------------------------
