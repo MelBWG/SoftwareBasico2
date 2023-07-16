@@ -1,4 +1,4 @@
-;       Trabalho 2 de Software Basico   - Arquivo principal calc.asm
+;       Trabalho 2 de Software Basico   - Arquivo principal calculadora.asm
 ;       Aluno: Giulia Filippi Giannetti         190013745
 ;       Programa age como calculadora de seis opcoes:
 ;       - SOMA
@@ -106,7 +106,7 @@ _start:         push pede_nome
                 push word size_pede_precisao
                 call mostra_string
                 call pega_int16
-                mov [precisao], eax
+                mov [precisao], ax
 mostra_menu:    push menu_principal0
                 push word s_menu_principal0
                 call mostra_string
@@ -131,11 +131,45 @@ mostra_menu:    push menu_principal0
                 push menu_principal7
                 push word s_menu_principal7
                 call mostra_string
-                push eax
-                call mostra_int16
-_exit:          mov eax,1
+                call pega_int16
+                mov [opcao_menu], ax
+                cmp [opcao_menu], 1d
+                je chama_soma
+                cmp [opcao_menu], 2d
+                je chama_sub
+                cmp [opcao_menu], 3d
+                je chama_mult
+                cmp [opcao_menu], 4d
+                je chama_div
+                cmp [opcao_menu], 5d
+                je chama_exp
+                cmp [opcao_menu], 6d
+                je chama_mod
+                cmp [opcao_menu], 7d
+                je _exit
+                jmp mostra_menu
+
+_exit:          mov eax, 1
                 mov ebx, 0
                 int 0x80
+
+chama_soma:     call soma
+                jmp mostra_menu
+
+chama_sub:      call subtracao
+                jmp mostra_menu
+
+chama_mult:     call multiplicacao
+                jmp mostra_menu
+
+chama_div:      call divisao
+                jmp mostra_menu
+
+chama_exp:      call exponencial
+                jmp mostra_menu
+
+chama_mod:      call modulo
+                jmp mostra_menu
 
 ;----------------------------------------------------------------------------------
 
@@ -198,7 +232,7 @@ fim_pega_int16: mov eax, 0
 pega_int32:     enter 6,0
                 mov eax, 0
                 mov dword resultado32, 0
-                mov byte flag_negativo32, 0       ; Inicia esses dois valores como 0
+                mov byte flag_negativo32, 0     ; Inicia esses dois valores como 0
                 mov eax, 3
                 mov ebx, 0
                 mov ecx, esp                    ; inicio da string no caso 16bit
@@ -224,7 +258,7 @@ mult32:         mov eax, resultado32
                 mov resultado32, eax
                 mov eax, 0                      ; reseta o valor de ax para evitar problemas
 compara32:      mov al, caractere32
-                sub eax, 0x30                    ; transforma em int
+                sub eax, 0x30                   ; transforma em int
                 cmp byte flag_negativo32,1
                 je subtrai32
                 add resultado32, eax
@@ -252,10 +286,10 @@ mostra_int16:   enter 1,0                       ; A principio, valor suficiente 
 calculo16:      mov eax, 0
                 mov edx, 0
                 mov word ax, entrada16          ; Carrega valor recebido
-                cmp ax, 0                      ; Verifica se e negativo
+                cmp ax, 0                       ; Verifica se e negativo
                 jge divide16
                 sub esp,1
-                mov byte [esp], 0x2D                       ; escreve o '-' antes de tudo
+                mov byte [esp], 0x2D            ; escreve o '-' antes de tudo
                 mov eax, 4
                 mov ebx, 1
                 mov ecx, esp
@@ -266,26 +300,26 @@ calculo16:      mov eax, 0
                 neg ax
 divide16:       mov edx,0
                 mov ecx, 10  
-                div ecx                        ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
+                div ecx                         ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
                 add dx, 0x30
                 sub esp, 1
-                mov byte [esp],dl                         ; nesse caso passamos a lidar com um char
+                mov byte [esp],dl               ; nesse caso passamos a lidar com um char
                 inc byte contador16                    
                 cmp eax, 0
-                je mostra_buffer16                ; se tivermos um caractere, o valor do contador vai ser 1
+                je mostra_buffer16              ; se tivermos um caractere, o valor do contador vai ser 1
                 jmp divide16
 
 mostra_buffer16:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
                 mov ebx, 1
                 mov ecx, esp
-                mov edx, contador16               ; numero de caracteres que recebemos
+                mov edx, contador16             ; numero de caracteres que recebemos
                 int 0x80
                 mov eax, 4
                 mov ebx, 1
                 mov ecx, nwln
                 mov edx, s_nwln
                 int 0x80
-                add esp, contador16               ; libera a pilha dos caracteres lidos
+                add esp, contador16             ; libera a pilha dos caracteres lidos
                 leave
                 ret 2
 
@@ -301,11 +335,11 @@ mostra_int32:   enter 1,0                       ; A principio, valor suficiente 
                 mov byte contador32, 0
 calculo32:      mov eax, 0
                 mov edx, 0
-                mov dword eax, entrada32          ; Carrega valor recebido
+                mov dword eax, entrada32        ; Carrega valor recebido
                 cmp eax, 0                      ; Verifica se e negativo
                 jge divide32
                 sub esp,1
-                mov byte [esp], 0x2D                       ; escreve o '-' antes de tudo
+                mov byte [esp], 0x2D            ; escreve o '-' antes de tudo
                 mov eax, 4
                 mov ebx, 1
                 mov ecx, esp
@@ -316,16 +350,16 @@ calculo32:      mov eax, 0
                 neg eax
 divide32:       mov edx,0
                 mov ecx, 10  
-                div ecx                        ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
+                div ecx                          ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
                 add dx, 0x30
                 sub esp, 1
-                mov byte [esp],dl                         ; nesse caso passamos a lidar com um char
+                mov byte [esp],dl                ; nesse caso passamos a lidar com um char
                 inc byte contador32                  
                 cmp eax, 0
-                je mostra_buffer32                ; se tivermos um caractere, o valor do contador vai ser 1
+                je mostra_buffer32               ; se tivermos um caractere, o valor do contador vai ser 1
                 jmp divide32
 
-mostra_buffer32:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
+mostra_buffer32:mov eax, 4                       ; Evita problemas :) podemos retirar posteriormente
                 mov ebx, 1
                 mov ecx, esp
                 mov edx, contador32              ; numero de caracteres que recebemos
@@ -346,27 +380,39 @@ mostra_buffer32:mov eax, 4                      ; Evita problemas :) podemos ret
 %define ptr_buffer      [ebp+10]
 %define contador        [ebp-2]
 %define contador_ptr    [ebp-6]
-%define caractere_lido  [ebp-10]
-pega_string:    enter 10,0
+pega_string:    enter 6,0
                 mov eax, ptr_buffer
-                mov contador_ptr, eax       ; move o ponteiro para o buffer
+                mov contador_ptr, eax           ; move o ponteiro para o buffer
 pega_char:      mov eax, 3
                 mov ebx, 0
                 mov ecx, contador_ptr
                 mov edx, 1
                 int 0x80
                 inc word contador
+                mov eax, contador_ptr
+                inc dword contador_ptr
+                cmp byte [eax], 0ah
+                je nl
                 mov ax, tam_buffer
                 cmp contador, ax
                 je clean_exit
-                mov eax, contador_ptr
-                inc dword contador_ptr
-                cmp byte [eax],0ah
-                jne pega_char
-                mov byte [eax],0
+                jmp pega_char             
 exit:           leave 
                 ret 6
-clean_exit:
+
+clean_exit1:    sub esp, 1
+readcharl:      mov eax, 3
+                mov ebx, 0
+                mov ecx, esp
+                mov edx, 1
+                mov al, [esp]  
+                cmp byte al, 0ah
+                jne readcharl
+                add esp, 1
+                jmp exit
+
+nl:             mov byte [eax],0
+                jmp exit
 
 
 ;   funcao de saida de strings (printf("%s"))
