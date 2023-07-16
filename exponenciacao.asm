@@ -27,42 +27,46 @@ exponenciacao:  cmp word [precisao],1
                 mov edx,0
                 sub esp, 2                  ; adiciona espaco na pilha pro segundo operador
                 call pega_int16
-                mov cx, ax                  
+                mov [esp], ax     
+                sub esp,2             
                 call pega_int16
                 mov [esp], ax               ; contador do loop
-                mov ax, cx
+                mov ax, [esp+2]
+                mov cx, ax
 loop_exp:       cmp word [esp], 1
                 je fim_loop
                 sub word [esp], 1
                 imul cx
                 jo overflow_exp
                 jmp loop_exp
-fim_loop:       add esp, 2
+fim_loop:       add esp, 4
                 push ax
                 call mostra_int16
                 jmp fim_exp
                 
 exp_lint:       sub esp, 4
                 call pega_int32
-                mov ecx, eax
+                mov [esp], eax
+                sub esp, 4
                 call pega_int32
                 mov [esp], eax
-                mov eax, ecx
+                mov eax, [esp+4]
+                mov ecx, eax
 loop_exp32:     cmp dword [esp],1
                 je fim_loop32
                 sub dword [esp], 1
                 imul ecx
                 jo overflow_exp
                 jmp loop_exp32
-fim_loop32:     add esp,4
+fim_loop32:     add esp,8
                 push eax
                 call mostra_int32
                 jmp fim_exp
 
-overflow_exp:   add esp, 2
+overflow_exp:   add esp, 4
                 cmp word [precisao], 1
                 jne m_m_ovflw
-                add esp, 2
+                add esp, 4
 m_m_ovflw:      push msg_overflow
                 push word s_msg_overflow
                 call mostra_string
