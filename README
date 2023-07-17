@@ -1,0 +1,18 @@
+ALUNO: Giulia Filippi Giannetti
+MAT: 190013745
+
+# Sistema operacional utilizado:
+
+Linux 64-bit
+Dist. Ubuntu Release 22.04
+Compilador nasm
+Ligador ld
+
+# Comandos de compilação (nesta ordem)
+
+nasm -f elf -o calculadora.o calculadora.asm
+ld -m elf_i386 -o calculadora calculadora.o
+
+
+# Para executar
+./calculadora
