@@ -42,8 +42,7 @@ mod_lint:       sub esp, 4
                 mov ecx, eax
                 mov eax, [esp]
                 cdq
-pega_mod32:     mov eax, [esp]
-                add esp, 4
+pega_mod32:     add esp, 4
                 idiv ecx
                 push edx
                 call mostra_int32

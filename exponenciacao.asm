@@ -23,7 +23,7 @@ extern precisao
 ; funcao n recebe argumentos      
 section .text
 exponenciacao:  cmp word [precisao],1
-                je mult_lint
+                je exp_lint
                 mov edx,0
                 sub esp, 2                  ; adiciona espaco na pilha pro segundo operador
                 call pega_int16

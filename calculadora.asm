@@ -114,8 +114,6 @@ _start:         push pede_nome
                 call mostra_string
                 call pega_int16
                 mov [precisao], ax
-                push ax
-                call mostra_int16
 
 mostra_menu:    push menu_principal0
                 push word s_menu_principal0
@@ -271,8 +269,6 @@ pega32:         mov eax, 3
 mult32:         mov eax, resultado32   
                 mov ecx, 10
                 imul ecx                         ; dx e ax com resultado (ax)
-                shl edx, 8
-                or eax, edx
                 mov resultado32, eax
                 mov eax, 0                      ; reseta o valor de ax para evitar problemas
 compara32:      mov al, caractere32
