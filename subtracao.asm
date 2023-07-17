@@ -5,6 +5,8 @@
 ;       Requisitos: Essa funcao nao faz operacoes nem entrada ou saida de dados, so chama outras funcoes
 ;       e realiza a operacao indicada
 
+;-----------------------------------------------------------------------------------
+
 global subtracao
 
 extern mostra_int16
@@ -13,7 +15,8 @@ extern pega_int16
 extern pega_int32
 extern precisao
 
-; funcao n recebe argumentos      
+;-----------------------------------------------------------------------------------
+
 section .text
 subtracao:      cmp word [precisao],1
                 je sub_lint

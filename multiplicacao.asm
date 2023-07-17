@@ -5,6 +5,8 @@
 ;       Requisitos: Essa funcao nao faz operacoes nem entrada ou saida de dados, so chama outras funcoes
 ;       e realiza a operacao indicada
 
+;-----------------------------------------------------------------------------------
+
 global multiplicacao
 
 extern mostra_int16
@@ -16,13 +18,9 @@ extern mostra_string
 extern _exit
 
 extern precisao
+   
+;-----------------------------------------------------------------------------------
 
-; Pega primeiro valor, guarda em ax
-; pega segundo valor, guarda em cx
-; Resultado obviamente vai ser em dx e ax
-; faz um shl dx 8b mais or eax,dx
-; A princípio se a multiplicação
-; funcao n recebe argumentos      
 section .text
 multiplicacao:  cmp word [precisao],1
                 je mult_lint

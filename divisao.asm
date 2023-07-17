@@ -5,6 +5,8 @@
 ;       Requisitos: Essa funcao nao faz operacoes nem entrada ou saida de dados, so chama outras funcoes
 ;       e realiza a operacao indicada
 
+;-----------------------------------------------------------------------------------
+
 global divisao
 
 extern mostra_int16
@@ -14,7 +16,8 @@ extern pega_int32
 
 extern precisao
   
-; Se o valor dos operandos é negativo, dx deve conter a extensão do sinal!!
+;-----------------------------------------------------------------------------------
+
 section .text
 divisao:        cmp word [precisao],1
                 je div_lint

@@ -7,10 +7,11 @@
 ;       - DIVISAO
 ;       - MOD
 ;       - EXPONENCIACAO
-; Requisitos: Essa função principal (main) não faz operações nem entrada ou saída de dados, só chama outras funções
+;       Requisitos: Essa funcao principal (main) nao faz operacoes nem entrada ou saida de dados, 
+;       so chama outras funcoes
 
 
-global _start                           ; Funcao Main
+global _start                           
 
 global mostra_int16
 global mostra_int32
@@ -73,6 +74,7 @@ s_nwln              equ      2
 
 
 ;----------------------------------------------------------------------------------
+
 section .bss 
 
 nome        resb    30
@@ -209,7 +211,7 @@ g_operacao:     mov ax, [esp+4]
 %define flag_negativo  [ebp-3] 
 %define caractere      [ebp-4]      
 
-pega_int16:     enter 4,0                       ; resultado (4) + flag_negativo (1) + caractere (1)
+pega_int16:     enter 4,0                       ; resultado (2) + flag_negativo (1) + caractere (1)
                 mov eax, 0
                 mov dword resultado, 0
                 mov byte flag_negativo, 0       ; Inicia esses dois valores como 0
@@ -247,7 +249,7 @@ subtrai:        sub resultado, ax
 fim_pega_int16: mov eax, 0
                 mov ax, resultado
                 leave
-                ret                             ; A principio ela n envia o resultado por EAX
+                ret                             ; A principio ela envia o resultado por AX
 
 
 
@@ -258,16 +260,16 @@ fim_pega_int16: mov eax, 0
 %define flag_negativo32  [ebp-5] 
 %define caractere32      [ebp-6]  
 
-pega_int32:     enter 6,0
+pega_int32:     enter 6,0                       ; resultado (4) + flag_negativo (1) + caractere (1)
                 mov eax, 0
                 mov dword resultado32, 0
                 mov byte flag_negativo32, 0     ; Inicia esses dois valores como 0
                 mov eax, 3
                 mov ebx, 0
-                mov ecx, esp                    ; inicio da string no caso 16bit
+                mov ecx, esp                   
                 mov edx, 1
                 int 0x80                        ; Pegou primeiro caractere
-                mov al, caractere32               ; set loop
+                mov al, caractere32             
                 cmp al, 0x2D                    ; Caractere '-' se for negativo, basta subtrair ao inves de somar o valor
                 jne mult32
                 mov byte flag_negativo32, 1
@@ -281,9 +283,9 @@ pega32:         mov eax, 3
                 je fim_pega_int32
 mult32:         mov eax, resultado32   
                 mov ecx, 10
-                imul ecx                         ; dx e ax com resultado (ax)
+                imul ecx                        ; edx e eax com resultado (eax)
                 mov resultado32, eax
-                mov eax, 0                      ; reseta o valor de ax para evitar problemas
+                mov eax, 0                      ; reseta o valor de eax para evitar problemas
 compara32:      mov al, caractere32
                 sub eax, 0x30                   ; transforma em int
                 cmp byte flag_negativo32,1
@@ -297,18 +299,18 @@ subtrai32:      sub resultado32, eax
 fim_pega_int32: mov eax, 0
                 mov eax, resultado32
                 leave
-                ret                             ; A principio ela n envia o resultado por EAX
+                ret                             ; A principio ela envia o resultado por EAX
 
 
 
 ;   Funcao de saida de valores inteiros (printf("%d"))
 ;   Sem valor de retorno
-;   Recebe um valor por pilha que pode ser um int32 ou int16, necessário verificar a flag
+;   Recebe um valor por pilha (int16)
 ;   Cuidado que nesse caso, esp aponta pro buffer de caracteres adquiridos
 ;   Contador conta quantos caracteres foram adicionados na pilha
 %define     entrada16     [ebp+8]
 %define     contador16    [ebp-1]
-mostra_int16:   enter 1,0                       ; A principio, valor suficiente para um int32 ou int16
+mostra_int16:   enter 1,0                       
                 mov byte contador16, 0
 calculo16:      mov eax, 0
                 mov edx, 0
@@ -337,7 +339,7 @@ divide16:       mov edx, 0
                 jle mostra_buffer16             ; se tivermos um caractere, o valor do contador vai ser 1
                 jmp divide16
 
-mostra_buffer16:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
+mostra_buffer16:mov eax, 4                    
                 mov ebx, 1
                 mov ecx, esp
                 mov dl, contador16              ; numero de caracteres que recebemos
@@ -356,7 +358,7 @@ mostra_buffer16:mov eax, 4                      ; Evita problemas :) podemos ret
 
 ;   Funcao de saida de valores inteiros (printf("%d"))
 ;   Sem valor de retorno
-;   Recebe um valor por pilha que pode ser um int32 ou int16, necessário verificar a flag
+;   Recebe um valor por pilha (int32)
 ;   Cuidado que nesse caso, esp aponta pro buffer de caracteres adquiridos
 ;   Contador conta quantos caracteres foram adicionados na pilha
 %define     entrada32     [ebp+8]
@@ -389,7 +391,7 @@ divide32:       mov edx,0
                 je mostra_buffer32
                 jmp divide32
 
-mostra_buffer32:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
+mostra_buffer32:mov eax, 4                      
                 mov ebx, 1
                 mov ecx, esp
                 mov dl, contador32              ; numero de caracteres que recebemos
@@ -453,8 +455,8 @@ nl:             mov byte [eax],0
                 jmp exit
 
 
-;   funcao de saida de strings (printf("%s"))
-;   recebe por pilha duas words
+;   Funcao de saida de strings (printf("%s"))
+;   Recebe por pilha duas words
 %define num_chars       [ebp+8] 
 %define string_begin    [ebp+10]
 mostra_string:  enter 0,0
@@ -464,5 +466,5 @@ mostra_string:  enter 0,0
                 mov dx, num_chars
                 int 0x80
                 leave
-                ret 6                           ; Dois argumentos that is
+                ret 6                          
 

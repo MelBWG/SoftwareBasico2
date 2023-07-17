@@ -5,6 +5,8 @@
 ;       Requisitos: Essa funcao nao faz operacoes nem entrada ou saida de dados, so chama outras funcoes
 ;       e realiza a operacao indicada
 
+;-----------------------------------------------------------------------------------
+
 global modulo
 
 extern mostra_int16
@@ -13,8 +15,9 @@ extern pega_int16
 extern pega_int32
 
 extern precisao
-  
-; Se o valor dos operandos é negativo, dx deve conter a extensão do sinal!!
+
+;-----------------------------------------------------------------------------------
+
 section .text
 modulo:         cmp word [precisao],1
                 je mod_lint
