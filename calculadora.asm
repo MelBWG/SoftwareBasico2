@@ -12,8 +12,6 @@
 
 global _start                           ; Funcao Main
 
-global mostra_menu                      ; Loop de escolha da operacao
-
 global mostra_int16
 global mostra_int32
 global pega_int16
@@ -113,7 +111,9 @@ _start:         push pede_nome
                 push word size_pede_precisao
                 call mostra_string
                 call pega_int16
-                mov [precisao], ax
+
+                push ax
+                call g_precisao
 
 mostra_menu:    push menu_principal0
                 push word s_menu_principal0
@@ -148,7 +148,8 @@ mostra_menu:    push menu_principal0
                 call mostra_string
 
                 call pega_int16
-                mov word [opcao_menu], ax
+                push ax
+                call g_operacao
                 cmp word [opcao_menu], 1d
                 je chama_soma
                 cmp word [opcao_menu], 2d
@@ -176,17 +177,29 @@ chama_sub:      call subtracao
                 jmp mostra_menu
 
 chama_mult:     call multiplicacao
-                jmp mostra_menu
+                jmp verifica_ovflw
 
 chama_div:      call divisao
                 jmp mostra_menu
 
 chama_exp:      call exponenciacao
-                jmp mostra_menu
+                jmp verifica_ovflw
 
 chama_mod:      call modulo
                 jmp mostra_menu
 
+verifica_ovflw: cmp ax, 1
+                je _exit
+                jmp mostra_menu
+
+
+g_precisao:     mov ax, [esp+4]
+                mov word [precisao], ax
+                ret 
+
+g_operacao:     mov ax, [esp+4]
+                mov word [opcao_menu], ax
+                ret
 ;----------------------------------------------------------------------------------
 
 ; Funcao de entrada de dados int (scanf("%d"))
@@ -321,13 +334,13 @@ divide16:       mov edx, 0
                 mov byte [esp],dl               ; nesse caso passamos a lidar com um char
                 add byte contador16, 1                    
                 cmp eax, 0
-                jle mostra_buffer16              ; se tivermos um caractere, o valor do contador vai ser 1
+                jle mostra_buffer16             ; se tivermos um caractere, o valor do contador vai ser 1
                 jmp divide16
 
 mostra_buffer16:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
                 mov ebx, 1
                 mov ecx, esp
-                mov dl, contador16             ; numero de caracteres que recebemos
+                mov dl, contador16              ; numero de caracteres que recebemos
                 int 0x80
                 mov eax, 4
                 mov ebx, 1
@@ -336,7 +349,7 @@ mostra_buffer16:mov eax, 4                      ; Evita problemas :) podemos ret
                 int 0x80
                 mov eax,0
                 mov al, contador16
-                add esp, eax             ; libera a pilha dos caracteres lidos
+                add esp, eax                    ; libera a pilha dos caracteres lidos
                 leave
                 ret 2
 
@@ -367,16 +380,16 @@ calculo32:      mov eax, 0
                 neg eax
 divide32:       mov edx,0
                 mov ecx, 10  
-                idiv ecx                          ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
+                idiv ecx                        ; Resultado em dx e ax. Utilizamos dx e deixamos ax quieto
                 add dx, 0x30
                 sub esp, 1
-                mov byte [esp],dl                ; nesse caso passamos a lidar com um char
-                inc byte contador32                  ; se tivermos um caractere, o valor do contador vai ser 1
+                mov byte [esp],dl               ; nesse caso passamos a lidar com um char
+                inc byte contador32             ; se tivermos um caractere, o valor do contador vai ser 1
                 cmp eax, 0
                 je mostra_buffer32
                 jmp divide32
 
-mostra_buffer32:mov eax, 4                       ; Evita problemas :) podemos retirar posteriormente
+mostra_buffer32:mov eax, 4                      ; Evita problemas :) podemos retirar posteriormente
                 mov ebx, 1
                 mov ecx, esp
                 mov dl, contador32              ; numero de caracteres que recebemos
@@ -388,7 +401,7 @@ mostra_buffer32:mov eax, 4                       ; Evita problemas :) podemos re
                 int 0x80
                 mov eax,0
                 mov al, contador32
-                add esp, eax              ; libera a pilha dos caracteres lidos
+                add esp, eax                    ; libera a pilha dos caracteres lidos
                 leave
                 ret 4
 

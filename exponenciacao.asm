@@ -72,5 +72,7 @@ m_m_ovflw:      push msg_overflow
                 call mostra_string
                 push nwln
                 push word s_nwln
-                call mostra_string      
+                call mostra_string    
+                mov eax, 1
+                  
 fim_exp:        ret

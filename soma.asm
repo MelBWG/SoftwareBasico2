@@ -3,22 +3,20 @@
 ;       Programa realiza a soma de dois numeros indicados pelo usuario em 16 bits ou 32 bits
 ;
 ;       Requisitos: Essa funcao nao faz operacoes nem entrada ou saida de dados, so chama outras funcoes
-;       e realiza a operacao indicada
+;       e realiza a operacao indicada. Faz operacao com sinal
 
 global soma
 
 extern mostra_int16
 extern mostra_int32
+
 extern pega_int16
 extern pega_int32
+
 extern precisao
 
-section .data   ; apenas debug!
 
-verifica_erro   db  'saiu com sucesso',0dh,0ah
-s_verifica_erro     equ     $-verifica_erro
-
-; funcao n recebe argumentos      
+;   Funcao nao recebe argumentos, retorno apenas por print na tela
 section .text
 soma:           cmp word [precisao],1
                 je soma_lint

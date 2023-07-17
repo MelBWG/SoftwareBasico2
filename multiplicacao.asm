@@ -13,6 +13,8 @@ extern pega_int16
 extern pega_int32
 extern mostra_string
 
+extern _exit
+
 extern precisao
 
 ; Pega primeiro valor, guarda em ax
@@ -57,5 +59,6 @@ overflow:       push msg_overflow
                 push nwln
                 push word s_nwln
                 call mostra_string 
+                mov eax, 1
                 
 fim_mult:       ret
